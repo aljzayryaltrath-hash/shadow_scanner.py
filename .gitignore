@@ -1,0 +1,111 @@
+import os
+import time
+import subprocess
+
+# Colors for professional Terminal look
+RED = '\033[1;31m'
+GREEN = '\033[1;32m'
+YELLOW = '\033[1;33m'
+BLUE = '\033[1;34m'
+CYAN = '\033[1;36m' # New color for enhanced UI
+RESET = '\033[0m'
+
+def clear_screen():
+    os.system('clear')
+
+def wolf_banner():
+    clear_screen()
+    print(f"{GREEN}")
+    print(r"""
+                         _  _
+                        ( `   )_
+                       ( ` _)  )
+                     ( `  _   )
+                   (` (_   _ )
+                 (` (_  _` _ )
+                 (` (_  _` _ )
+                (` (_  _` _ )
+                (` (_  _` _ )
+                (` (_  _` _ )
+                (` (_  _` _ )
+                (` (_  _` _ )
+                (` (_  _` _ )
+                (` (_  _` _ )
+                (` (_  _` _ )
+               ( _ (_ ` _ ` _ )
+             ( ` _ ` _ ` _ ` _ )
+            ( _ ` _ ` _ ` _ ` _ )
+             ( ` _ ` _ ` _ ` _ )
+              ( _ ` _ ` _ ` _ )
+               ( ` _ ` _ ` _ )
+                ( _ ` _ ` _ )
+                 ( ` _ ` _ )
+                  ( _ ` _ )
+                   ( ` _ )
+                    ( _ )
+                     ( )
+                     _|_
+    """)
+    print(f"{RED}      ███████╗██╗  ██╗ █████╗ ██████╗  █████╗  █████╗ ███╗   ██╗███████╗")
+    print(f"{RED}      ██╔════╝██║  ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗████╗  ██║██╔════╝")
+    print(f"{RED}      ███████╗███████║███████║██████╔╝███████║███████║██╔██╗ ██║█████╗  ")
+    print(f"{RED}      ╚════██║██╔══██║██╔══██║██╔══██╗██╔══██║██╔══██║██║╚██╗██║██╔══╝  ")
+    print(f"{RED}      ███████║██║  ██║██║  ██║██║  ██║██║  ██║██║  ██║██║ ╚████║███████╗")
+    print(f"{RED}      ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝")
+    print(f"{YELLOW}          NETWORK DEVICES RADAR V1.0 | Developed by nador DZ")
+    print(f"{RESET}\n")
+
+def main_menu():
+    print(f"{CYAN}--------------------------------------------------")
+    print(f"{BLUE} [1] Start Network Scan")
+    print(f"{BLUE} [2] View Scan Results")
+    print(f"{BLUE} [3] About Shadow Scanner")
+    print(f"{RED} [E] Exit")
+    print(f"{CYAN}--------------------------------------------------")
+    print(f"{RESET}")
+
+def scan_network():
+    clear_screen()
+    print(f"{YELLOW}[*] Initializing Network Scan... Please wait...\n{RESET}")
+    print(f"{YELLOW}This might take a moment as it maps all active devices.{RESET}")
+    print(f"{YELLOW}Make sure 'nmap' is installed (pkg install nmap){RESET}")
+    time.sleep(3) # Simulate loading
+
+    try:
+        # Get the default gateway (router IP)
+        result = subprocess.run(['ip', 'route'], capture_output=True, text=True)
+        lines = result.stdout.split('\n')
+        gateway = None
+        for line in lines:
+            if 'default via' in line:
+                gateway = line.split('default via')[1].split('dev')[0].strip()
+                break
+        
+        if not gateway:
+            print(f"{RED}[-] Could not determine gateway IP. Please check your network connection.{RESET}")
+            input(f"\nPress Enter to return to main menu...{RESET}")
+            return
+            
+        ip_range = '.'.join(gateway.split('.')[:-1]) + '.0/24' # Example: 192.168.1.0/24
+
+        print(f"{GREEN}[+] Scanning network range: {ip_range}{RESET}")
+        print(f"{YELLOW}Using 'nmap' for comprehensive scanning...{RESET}")
+
+        # Use nmap to scan the network
+        # -sn: Ping scan - disable port scan
+        # -oG: Greppable output - easy to parse
+        nmap_command = ['nmap', '-sn', ip_range]
+        nmap_result = subprocess.run(nmap_command, capture_output=True, text=True)
+
+        devices = []
+        for line in nmap_result.stdout.split('\n'):
+            if "Nmap scan report for" in line:
+                ip_address = line.split("for")[1].split(" ")[1].strip()
+                devices.append(ip_address)
+            elif "Host is up" in line and not devices: # If no 'Nmap scan report' lines but hosts are up
+                pass # More complex parsing needed for pure 'Host is up' lines if IP is not explicitly in "scan report" line
+
+        if devices:
+            print(f"{GREEN}\n[*] Scan Complete! Found {len(devices)} active devices:{RESET}")
+            for i, device_ip in enumerate(devices):
+                print(f"{BLUE}  [{i+1}] IP
